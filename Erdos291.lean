@@ -3,3 +3,5 @@
 import Erdos291.Basic
 import Erdos291.Characterization
 import Erdos291.GcdPositive
+import Erdos291.BadSet
+import Erdos291.GcdOne
