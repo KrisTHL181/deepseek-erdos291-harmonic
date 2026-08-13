@@ -7,3 +7,4 @@ import Erdos291.BadSet
 import Erdos291.GcdOne
 import Erdos291.HAProgress
 import Erdos291.Mertens
+import Erdos291.DoubleCount
