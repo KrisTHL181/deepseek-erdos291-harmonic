@@ -16,7 +16,7 @@
 三轮工作得到了：
 
 1. **完全刻画**（已知，Steinerberger；本文重新推导并大规模核验）：$p\mid\gcd(a_n,L_n)\iff p\mid\text{分子}(H_{r_p})$，$r_p$ 为 $n$ 的 $p$ 进制首位。
-2. **新结构**（本文）：坏位集 $E_p$ 是 Bernoulli 多项式 $B_{p-1}(x)-B_{p-1}$ 模 $p$ 的根集，把问题接到 Kummer/不规则素数理论。
+2. **新结构**（本文，两项）：坏位集 $E_p$ 是 Bernoulli 多项式 $B_{p-1}(x)-B_{p-1}$ 模 $p$ 的根集，把问题接到 Kummer/不规则素数理论；且 $E_p$ **无相邻坏位**（$r,r+1$ 不同坏），由此 $|E_p|\le(p-1)/2$，坏密度 $c_p=|E_p|/(p-1)\le1/2$ 对每个素数无条件成立（初等）。
 3. **精确 iff 与若干双向等价**：素数幂影子形式、Kronecker 形式、覆盖系统形式。
 4. **一批被排除的伪抓手**：坏位有界、Eswarathasan–Levine 猜想、Schanuel、具名等价、自举变换、素数幂间隙法——全部不闭合。
 5. **最小充分假设** $H_A$（对维数一致的 Kronecker 下界）被精确定位——**没有任何已知猜想提供它**。
@@ -60,6 +60,8 @@ $$\gcd(a_n,L_n)=1\iff \text{对所有素数 }p\le n,\quad r_p\notin E_p,$$
 
 - **Wolstenholme（1862）**：$p\ge3$ 时 $p\mid\text{分子}(H_{p-1})$，故 $p-1\in E_p$ 恒成立。
 - **对称性**：$H_{p-1-r}\equiv H_r\pmod p$，故 $r\in E_p\iff p-1-r\in E_p$。**额外坏位成对出现 $\{r,p-1-r\}$**，$|E_p|$ 恒为奇数。
+- **无相邻坏位**（本文）：若 $r,r+1\in E_p$，则 $0\equiv H_{r+1}-H_r\equiv (r+1)^{-1}\pmod p$，而 $r+1<p$ 是单位，矛盾。故 $E_p$ 不含连续两元素。
+- **初等上界**（本文）：无相邻坏位 ⟹ $(p-1)/2$ 个连续对 $\{1,2\},\{3,4\},\dots$ 每对至多含一个坏位，故 $|E_p|\le(p-1)/2$，即坏密度 $c_p\le1/2$ **对每个素数无条件成立**。（已在 Lean 中形式化为 `E_card_le_half`、`c_le_one_half`。）
 - **小位安全表**（因 $\text{分子}(H_1)=1,\text{分子}(H_2)=3,\text{分子}(H_3)=11,\text{分子}(H_4)=25,\text{分子}(H_5)=137$）：
 
 | 位 $r$ | 仅对哪些素数坏 |
@@ -95,6 +97,7 @@ $$p\mid\text{分子}(H_r)\iff B_{p-1}(r+1)\equiv B_{p-1}\pmod p,$$
 ### 3.3 $|E_p|$ 的分布与界
 
 - **无条件亚线性界**（Wu–Chen II，对 $J_p$ 的一致计数）：$|E_p|\le 3(p-1)^{2/3+1/(25\log p)}=O(p^{2/3+o(1)})$。
+- **无条件初等界**（本文）：$|E_p|\le(p-1)/2$，即 $c_p\le1/2$（无相邻坏位，见 §3.1）。比 Wu–Chen 弱（线性对亚线性），但逐点、初等，并给出均匀的 $\log(1-c_p)\ge-2c_p$（因 $\log(1-t)\ge-2t$ 对 $0\le t\le1/2$），是乘积下界论证逐点成立的关键输入。
 - **经验分布**（本文，$p\le5000$）：$P(|E_p|=1)=60.5\%$（无额外坏位），额外坏位**成对**，配对个数 $\sim\text{Poisson}(\tfrac12)$（$P(\text{无额外})=e^{-1/2}\approx0.607$，吻合）；均值 $|E_p|-1\approx0.98$（**不衰减**）。
 - **关键推论**：$\sum_{p\le x}\frac{|E_p|-1}{p-1}\sim\ln\ln x$ **发散**，额外坏位**不可忽略**（渐近地几乎加倍 Wolstenholme 的贡献）。
 - 与 OEIS 一致：A092194（H-不规则素数，密度 $\approx0.4$）与实测 39.5% 额外坏位率吻合；A098464（$\gcd=1$ 的 $n$）、A358557（补集）、A110566（$\gcd$ 值）。
@@ -257,7 +260,8 @@ $$\sum_{p\le5000}\frac{|E_p|-1}{p-1}\approx0.97,\quad \text{mean}(|E_p|-1)\appro
 - $\gcd>1$ 无限次（$n=2\cdot3^e$）。
 - 完全刻画 + Bernoulli 多项式刻画 $E_p$。
 - 有限归约、$S_B$ 归约、素数幂影子形式、Kronecker 形式、覆盖系统形式（R1）。
-- $|E_p|=O(p^{2/3+o(1)})$ 无条件界。
+- $|E_p|=O(p^{2/3+o(1)})$ 无条件界（Wu–Chen）。
+- $|E_p|\le(p-1)/2$（$c_p\le1/2$）初等无条件界（无相邻坏位，§3.1）。
 - 单/双素数情形（Bertrand / PNT+Weyl）。
 - 否定性障碍：无首位有界族、无自举、$|E_p|\le C$ 不足、E–L 无推论、无具名等价、素数幂 $\sqrt n$ 间隙法伪。
 
@@ -296,3 +300,5 @@ $$G(x)\ge(1-\varepsilon(x))\,x\prod_{p\le x}\Big(1-\tfrac{|E_p|}{p-1}\Big).$$
 ---
 
 *（附注：工作目录 /mnt/Data/erdos 下遗留若干探索脚本 explore.py、fast_good.py、families.py、interval2.py、power.py、analyze.py、verify_count.py、verify_extra.py 等，以及各轮子报告 subproblem*.md、erdos_291_*.md，均为探索产物，可清理或归档。）*
+
+*（Lean 形式化现状：`GcdPositive` 无条件证 $\gcd>1$ 无限次；`Characterization` 证完全刻画；`BadSet` 证 Wolstenholme、配对对称性、无相邻坏位与 $|E_p|\le(p-1)/2$；`GcdOne` 在分布下界假设 $H_A$ 与算术上界假设「$\sum_{p\le x}c_p\le C\log\log x$」下条件性证 $\gcd=1$ 无限次。其中**无相邻坏位 → $c_p\le1/2$** 为本次形式化新引入、报告先前未收录的初等结论，已回填至 §0/§3.1/§3.3/§12.1。）*
