@@ -191,4 +191,67 @@ theorem HA_shell_implies_infinite (hshell : HA_shell) :
   rcases exists_good_of_deltaG_pos X hdelta with ⟨n, hXn, _, hgood⟩
   exact ⟨n, hgood, by omega⟩
 
+/-! ## Reformulation: `HA_shell` discards its quantitative decoration -/
+
+/-- The content of `HA_shell` after discarding the decorative `κ` and the product: the
+dyadic shell count is positive for infinitely many `X`. -/
+def HA_shell_weak : Prop := Set.Infinite { X : ℕ | 0 < deltaG X }
+
+/-- `HA_shell` implies `HA_shell_weak`: the existing `HA_shell_implies_infinite` only ever
+reads `deltaG X ≥ 1` off the positive lower bound (via `deltaG_pos_of_lower_bound`), so the
+quantitative hypothesis `κ · X · ∏_{p ≤ 2X} (1 - c p)` is discarded. -/
+theorem HA_shell_implies_HA_shell_weak (h : HA_shell) : HA_shell_weak := by
+  rcases h with ⟨κ, hκ, hinf⟩
+  let P : ℕ → ℝ := fun X =>
+    ∏ p ∈ (Finset.Icc 2 (2 * X)).filter Nat.Prime, (1 - (c p : ℝ))
+  have hdiff : Set.Infinite
+      ({ X : ℕ | κ * (X : ℝ) * P X ≤ (deltaG X : ℝ) } \ ({0} : Set ℕ)) :=
+    hinf.sdiff (Set.finite_singleton 0)
+  have hsub : ({ X : ℕ | κ * (X : ℝ) * P X ≤ (deltaG X : ℝ) } \ ({0} : Set ℕ)) ⊆
+      { X : ℕ | 0 < deltaG X } := by
+    intro X hX
+    rcases hX with ⟨hineq, hXne⟩
+    have hXpos : 0 < X := Nat.pos_of_ne_zero (by intro hz; exact hXne hz)
+    have hpos : 0 < κ * (X : ℝ) * P X := by
+      dsimp [P]
+      exact kappa_mul_prod_pos κ hκ X hXpos
+    have hlt : 0 < (deltaG X : ℝ) := lt_of_lt_of_le hpos hineq
+    exact Nat.cast_pos.mp hlt
+  exact Set.Infinite.mono hsub hdiff
+
+/-- The weak fragment is exactly the conclusion: a positive dyadic shell count infinitely
+often is equivalent to infinitely many `n` with `gcd (a n) (L n) = 1`. -/
+theorem HA_shell_weak_iff_infinite :
+    HA_shell_weak ↔ Set.Infinite { n : ℕ | Nat.gcd (a n) (L n) = 1 } := by
+  constructor
+  · -- forward: unbounded X with 0 < deltaG X give unbounded good n
+    intro hX
+    apply infinite_of_forall_exists_nat_gt
+    intro N
+    rcases exists_nat_gt_of_infinite hX N with ⟨X, hXmem, hNX⟩
+    have hΔ : 1 ≤ deltaG X := by
+      have hpos : 0 < deltaG X := hXmem
+      omega
+    rcases exists_good_of_deltaG_pos X hΔ with ⟨n, hXn, _, hgood⟩
+    exact ⟨n, hgood, by omega⟩
+  · -- backward: each good n ≥ 2 sits in the shell (n-1, 2(n-1)]
+    intro hgood
+    apply infinite_of_forall_exists_nat_gt
+    intro N
+    rcases exists_nat_gt_of_infinite hgood (N + 1) with ⟨n, hgoodn, hNn⟩
+    refine ⟨n - 1, ?_, ?_⟩
+    · have hdelta : 0 < deltaG (n - 1) := by
+        rw [shell_count_identity (n - 1)]
+        have hn2 : 2 ≤ n := by omega
+        have hshell : n ∈ Finset.Icc (n - 1 + 1) (2 * (n - 1)) := by
+          rw [Finset.mem_Icc]
+          omega
+        have hmem : n ∈
+            ((Finset.Icc (n - 1 + 1) (2 * (n - 1))).filter
+              fun m => Nat.gcd (a m) (L m) = 1) :=
+          Finset.mem_filter.mpr ⟨hshell, hgoodn⟩
+        exact Finset.card_pos.mpr ⟨n, hmem⟩
+      exact hdelta
+    · omega
+
 end Erdos291
