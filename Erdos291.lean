@@ -5,6 +5,7 @@ import Erdos291.Characterization
 import Erdos291.GcdPositive
 import Erdos291.BadSet
 import Erdos291.GcdOne
+import Erdos291.GcdOneWeak
 import Erdos291.HAProgress
 import Erdos291.Mertens
 import Erdos291.MertensUpper
