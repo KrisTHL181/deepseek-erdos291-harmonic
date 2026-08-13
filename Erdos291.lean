@@ -9,3 +9,4 @@ import Erdos291.HAProgress
 import Erdos291.Mertens
 import Erdos291.MertensUpper
 import Erdos291.DoubleCount
+import Erdos291.Bernoulli
