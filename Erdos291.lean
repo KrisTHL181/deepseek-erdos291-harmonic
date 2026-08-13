@@ -14,3 +14,4 @@ import Erdos291.DoubleCount
 import Erdos291.Bernoulli
 import Erdos291.BulkRemoval
 import Erdos291.Bonferroni
+import Erdos291.SecondMoment
