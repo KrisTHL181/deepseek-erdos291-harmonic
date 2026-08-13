@@ -1,4 +1,5 @@
 import Erdos291.Characterization
+import Mathlib.Data.Set.Finite.Basic
 
 /-!
 # Erdős #291 — the `gcd > 1` direction
@@ -25,10 +26,9 @@ open Nat
 lemma log_three_two_mul_pow (e : ℕ) : Nat.log 3 (2 * 3 ^ e) = e := by
   rw [Nat.log_eq_iff]
   · constructor
-    · simpa using Nat.mul_le_mul_right (3 ^ e) (by norm_num : 1 ≤ 2)
+    · simp
     · have h : 2 * 3 ^ e < 3 ^ e * 3 := by
-        simpa [mul_comm] using
-          (Nat.mul_lt_mul_right (pow_pos (by norm_num : 0 < 3) e)).mpr (by norm_num : 2 < 3)
+        simp [mul_comm]
       simpa [pow_succ] using h
   · right
     exact ⟨by norm_num, by positivity⟩
@@ -43,19 +43,39 @@ theorem three_dvd_gcd_two_mul_pow_three (e : ℕ) :
   have h3le : 3 ≤ 2 * 3 ^ (e + 1) := by
     calc
       3 ≤ 3 ^ (e + 1) := Nat.le_self_pow (Nat.succ_ne_zero e) 3
-      _ ≤ 2 * 3 ^ (e + 1) := by simpa [mul_comm] using
-          (Nat.le_mul_of_pos_right (n := 3 ^ (e + 1)) (by norm_num : 0 < 2))
+      _ ≤ 2 * 3 ^ (e + 1) := by
+        simp
   have h3a : 3 ∣ a (2 * 3 ^ (e + 1)) := by
-    haveI : Fact (Nat.Prime 3) := ⟨Nat.prime_three⟩
     rw [dvd_a_iff_sum_inv_eq_zero 3 (2 * 3 ^ (e + 1)) h3le]
     have hlog : Nat.log 3 (2 * 3 ^ (e + 1)) = e + 1 := log_three_two_mul_pow (e + 1)
     have hdiv : (2 * 3 ^ (e + 1)) / 3 ^ (e + 1) = 2 := by
-      simpa [mul_comm] using Nat.mul_div_right 2 (pow_pos (by norm_num : 0 < 3) (e + 1))
+      simp
     simpa [hlog, hdiv] using sum_inv_Icc_one_two_three
   have h3L : 3 ∣ L (2 * 3 ^ (e + 1)) :=
     dvd_L_of_mem_Icc (2 * 3 ^ (e + 1)) 3 (by
       rw [Finset.mem_Icc]
       exact ⟨by norm_num, h3le⟩)
   exact Nat.dvd_gcd h3a h3L
+
+/-- `gcd (a n) (L n) > 1` for infinitely many `n`, witnessed by the family `n = 2 · 3^(e+1)`. -/
+theorem gcd_gt_one_infinitely_often :
+    Set.Infinite {n : ℕ | 1 < Nat.gcd (a n) (L n)} := by
+  let f : ℕ → ℕ := fun e => 2 * 3 ^ (e + 1)
+  have hf_inj : Function.Injective f := by
+    intro e₁ e₂ h
+    have hpow : 3 ^ (e₁ + 1) = 3 ^ (e₂ + 1) :=
+      Nat.mul_left_cancel (by norm_num : 0 < 2) h
+    have hsucc : e₁ + 1 = e₂ + 1 :=
+      Nat.pow_right_injective (by norm_num : 2 ≤ 3) hpow
+    omega
+  have hmem : ∀ e : ℕ, f e ∈ {n : ℕ | 1 < Nat.gcd (a n) (L n)} := by
+    intro e
+    have h3 : 3 ∣ Nat.gcd (a (2 * 3 ^ (e + 1))) (L (2 * 3 ^ (e + 1))) :=
+      three_dvd_gcd_two_mul_pow_three e
+    have h3le : 3 ≤ Nat.gcd (a (2 * 3 ^ (e + 1))) (L (2 * 3 ^ (e + 1))) :=
+      Nat.le_of_dvd
+        (Nat.gcd_pos_of_pos_right (a (2 * 3 ^ (e + 1))) (L_pos (2 * 3 ^ (e + 1)))) h3
+    exact lt_of_lt_of_le (by norm_num : 1 < 3) h3le
+  exact Set.infinite_of_injective_forall_mem hf_inj hmem
 
 end Erdos291

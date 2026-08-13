@@ -63,9 +63,9 @@ lemma padicValNat_div_of_dvd {p a b : ℕ} [Fact p.Prime] (hb : b ∣ a) (ha : a
   omega
 
 /-- If `p^Nat.log p n` does not divide `k` (with `1 ≤ k ≤ n`), then `p ∣ L n / k`. -/
-lemma p_dvd_L_div_of_not_dvd_pow (p n k : ℕ) (hp : Nat.Prime p) (hk : k ∈ Finset.Icc 1 n)
+lemma p_dvd_L_div_of_not_dvd_pow (p n k : ℕ) [Fact p.Prime] (hk : k ∈ Finset.Icc 1 n)
     (h : ¬ p ^ Nat.log p n ∣ k) : p ∣ L n / k := by
-  letI : Fact p.Prime := ⟨hp⟩
+  have hp : Nat.Prime p := Fact.out
   have hkL : k ∣ L n := dvd_L_of_mem_Icc n k hk
   have hk0 : k ≠ 0 := by
     have : 1 ≤ k := (Finset.mem_Icc.mp hk).1
@@ -90,15 +90,14 @@ lemma p_dvd_L_div_of_not_dvd_pow (p n k : ℕ) (hp : Nat.Prime p) (hk : k ∈ Fi
   simpa using (padicValNat_dvd_iff_le (p := p) (a := L n / k) (n := 1) hLk_ne).2 hle
 
 /-- The terms of `a n` with `p^e ∤ k` vanish mod `p`. -/
-lemma sum_a_eq_sum_filter (p n : ℕ) [Fact p.Prime] (hpn : p ≤ n) :
+lemma sum_a_eq_sum_filter (p n : ℕ) [Fact p.Prime] (_hpn : p ≤ n) :
     (a n : ZMod p) =
       ∑ k ∈ (Finset.Icc 1 n).filter (fun k => p ^ Nat.log p n ∣ k), ((L n / k : ℕ) : ZMod p) := by
-  have hp : Nat.Prime p := Fact.out
   let P : ℕ → Prop := fun k => p ^ Nat.log p n ∣ k
   rw [a]
   have hcast : (↑(∑ k ∈ Finset.Icc 1 n, L n / k) : ZMod p) =
       ∑ k ∈ Finset.Icc 1 n, ((L n / k : ℕ) : ZMod p) := by
-    simpa using (map_sum (Nat.castRingHom (ZMod p)) (fun k => L n / k) (Finset.Icc 1 n))
+    simp
   rw [hcast]
   rw [← Finset.sum_filter_add_sum_filter_not (Finset.Icc 1 n) P (fun k => ((L n / k : ℕ) : ZMod p))]
   have hzero : (∑ k ∈ (Finset.Icc 1 n).filter (fun k => ¬ P k), ((L n / k : ℕ) : ZMod p)) = 0 := by
@@ -106,7 +105,7 @@ lemma sum_a_eq_sum_filter (p n : ℕ) [Fact p.Prime] (hpn : p ≤ n) :
     intro k hk
     have hkIcc : k ∈ Finset.Icc 1 n := (Finset.mem_filter.mp hk).1
     have hnot : ¬ P k := (Finset.mem_filter.mp hk).2
-    have hpdvd : p ∣ L n / k := p_dvd_L_div_of_not_dvd_pow p n k hp hkIcc hnot
+    have hpdvd : p ∣ L n / k := p_dvd_L_div_of_not_dvd_pow p n k hkIcc hnot
     exact (ZMod.natCast_eq_zero_iff (L n / k) p).2 hpdvd
   simp [hzero, P]
 
@@ -200,8 +199,8 @@ lemma a_eq_mul_sum_inv (p n : ℕ) [Fact p.Prime] (hpn : p ≤ n) :
     exact zmod_div_mul_inv (p := p) (j := j) (m := L n / p ^ Nat.log p n) hjdiv hunit
 
 /-- `L n / p^e` is coprime to `p`. -/
-lemma not_dvd_L_div_pow_log (p n : ℕ) (hp : Nat.Prime p) : ¬ p ∣ L n / p ^ Nat.log p n := by
-  letI : Fact p.Prime := ⟨hp⟩
+lemma not_dvd_L_div_pow_log (p n : ℕ) [Fact p.Prime] : ¬ p ∣ L n / p ^ Nat.log p n := by
+  have hp : Nat.Prime p := Fact.out
   have hdiv : padicValNat p (L n / p ^ Nat.log p n) = 0 := by
     rw [padicValNat.div_pow (p := p) (pow_log_dvd_L p n hp)]
     rw [lcmUpto_padicValNat p n hp]
@@ -231,7 +230,7 @@ theorem dvd_a_iff_sum_inv_eq_zero (p n : ℕ) [Fact p.Prime] (hpn : p ≤ n) :
     rw [ZMod.isUnit_iff_coprime]
     rw [Nat.coprime_comm]
     rw [Nat.Prime.coprime_iff_not_dvd hp]
-    exact not_dvd_L_div_pow_log p n hp
+    exact not_dvd_L_div_pow_log p n
   rw [← ZMod.natCast_eq_zero_iff (a n) p]
   rw [hc]
   constructor
