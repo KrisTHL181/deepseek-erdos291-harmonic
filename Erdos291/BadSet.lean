@@ -350,6 +350,112 @@ lemma mem_E_iff_pm_sub (p r : ℕ) [Fact p.Prime] (hr : r ∈ Finset.Icc 1 (p - 
   rw [num_dvd_iff_sum_inv_zero p (p - 1 - r) hpmr_lt]
   rw [hsum]
 
+/-! ## No two adjacent bad digits -/
+
+/-- If `(r + 1) / 2 = (s + 1) / 2` then `s ≤ r + 1` (the map `r ↦ (r + 1) / 2` collapses
+exactly the adjacent pairs `{2k - 1, 2k}`). -/
+lemma div_two_eq_imp_le_succ (r s : ℕ) (h : (r + 1) / 2 = (s + 1) / 2) : s ≤ r + 1 := by
+  have h1 : 2 * ((r + 1) / 2) ≤ r + 1 := by
+    have hdiv : (r + 1) / 2 * 2 ≤ r + 1 := Nat.div_mul_le_self (r + 1) 2
+    omega
+  have h4 : s + 1 < 2 * ((s + 1) / 2 + 1) :=
+    Nat.lt_mul_div_succ (s + 1) (by norm_num : 0 < 2)
+  rw [← h] at h4
+  omega
+
+/-- If `(r + 1) / 2 = (s + 1) / 2` then `r` and `s` are either equal or adjacent. -/
+lemma div_two_eq_imp_eq_or_adjacent (r s : ℕ) (h : (r + 1) / 2 = (s + 1) / 2) :
+    r = s ∨ r + 1 = s ∨ s + 1 = r := by
+  by_cases heq : r = s
+  · exact Or.inl heq
+  · have hs_le : s ≤ r + 1 := div_two_eq_imp_le_succ r s h
+    have hr_le : r ≤ s + 1 := div_two_eq_imp_le_succ s r h.symm
+    omega
+
+/-- For an odd `p`, `p / 2 = (p - 1) / 2`. -/
+lemma odd_div_two_eq (p : ℕ) (hp : Odd p) : p / 2 = (p - 1) / 2 := by
+  rcases hp with ⟨k, rfl⟩
+  omega
+
+/-- `E p` contains no two consecutive integers: if `r ∈ E p` then `r + 1 ∉ E p`.  Indeed
+`r, r + 1 ∈ E p` would give `∑_{j≤r} j⁻¹ = 0 = ∑_{j≤r+1} j⁻¹`, hence `(r + 1)⁻¹ = 0` in
+`ZMod p`, impossible for a unit. -/
+lemma not_mem_E_succ (p r : ℕ) [Fact p.Prime] (hp : 2 ≤ p) (hrE : r ∈ E p) :
+    r + 1 ∉ E p := by
+  intro hsuccE
+  have hprime : Nat.Prime p := Fact.out
+  have hrIcc : r + 1 ∈ Finset.Icc 1 (p - 1) := by
+    unfold E at hsuccE
+    exact (Finset.mem_filter.mp hsuccE).1
+  have hsucc_lt_p : r + 1 < p := by
+    have hle : r + 1 ≤ p - 1 := (Finset.mem_Icc.mp hrIcc).2
+    omega
+  have hr_lt_p : r < p := by omega
+  have hdvd_r : (p : ℤ) ∣ (harmonic r).num := by
+    unfold E at hrE
+    exact (Finset.mem_filter.mp hrE).2
+  have hdvd_succ : (p : ℤ) ∣ (harmonic (r + 1)).num := by
+    unfold E at hsuccE
+    exact (Finset.mem_filter.mp hsuccE).2
+  have hsum_r : (∑ j ∈ Finset.Icc 1 r, ((j : ZMod p)⁻¹)) = 0 :=
+    (num_dvd_iff_sum_inv_zero p r hr_lt_p).mp hdvd_r
+  have hsum_succ : (∑ j ∈ Finset.Icc 1 (r + 1), ((j : ZMod p)⁻¹)) = 0 :=
+    (num_dvd_iff_sum_inv_zero p (r + 1) hsucc_lt_p).mp hdvd_succ
+  have hsplit : (∑ j ∈ Finset.Icc 1 (r + 1), ((j : ZMod p)⁻¹)) =
+      (∑ j ∈ Finset.Icc 1 r, ((j : ZMod p)⁻¹)) + ((r + 1 : ℕ) : ZMod p)⁻¹ := by
+    rw [Finset.sum_Icc_succ_top (by omega : 1 ≤ r + 1)]
+  have h_inv_zero : ((r + 1 : ℕ) : ZMod p)⁻¹ = 0 := by
+    rw [hsplit] at hsum_succ
+    rw [hsum_r] at hsum_succ
+    simpa using hsum_succ
+  have hunit : IsUnit ((r + 1 : ℕ) : ZMod p) := by
+    rw [ZMod.isUnit_iff_coprime]
+    rw [Nat.coprime_comm]
+    rw [Nat.Prime.coprime_iff_not_dvd hprime]
+    intro hdvd
+    have hpos : 0 < r + 1 := by omega
+    exact (not_lt_of_ge (Nat.le_of_dvd hpos hdvd)) hsucc_lt_p
+  exact (hunit.inv).ne_zero h_inv_zero
+
+/-- For an odd prime `p`, the bad set `E p` has at most `(p - 1) / 2` elements: the
+`(p - 1) / 2` consecutive pairs `{1, 2}, {3, 4}, …` each contribute at most one bad digit. -/
+lemma E_card_le_half (p : ℕ) [Fact p.Prime] (hp : 3 ≤ p) : (E p).card ≤ (p - 1) / 2 := by
+  have hp2 : 2 ≤ p := by omega
+  have hcard : (E p).card ≤ (Finset.Icc 1 (p / 2)).card := by
+    refine Finset.card_le_card_of_injOn (fun r => (r + 1) / 2) ?_ ?_
+    · intro r hr
+      have hrIcc : r ∈ Finset.Icc 1 (p - 1) := by
+        unfold E at hr
+        exact (Finset.mem_filter.mp hr).1
+      have hr_lower : 1 ≤ r := (Finset.mem_Icc.mp hrIcc).1
+      have hr_upper : r ≤ p - 1 := (Finset.mem_Icc.mp hrIcc).2
+      change (r + 1) / 2 ∈ Finset.Icc 1 (p / 2)
+      rw [Finset.mem_Icc]
+      constructor
+      · have hdivpos : 0 < (r + 1) / 2 :=
+          Nat.div_pos (by omega : 2 ≤ r + 1) (by norm_num : 0 < 2)
+        omega
+      · exact Nat.div_le_div_right (by omega : r + 1 ≤ p)
+    · intro r hr s hs hf
+      by_cases heq : r = s
+      · exact heq
+      · have hrel : r = s ∨ r + 1 = s ∨ s + 1 = r := div_two_eq_imp_eq_or_adjacent r s hf
+        rcases hrel with heq' | hrel
+        · exact (heq heq').elim
+        · rcases hrel with hsucc | hpred
+          · have hnot : r + 1 ∉ E p := not_mem_E_succ p r hp2 hr
+            rw [← hsucc] at hs
+            exact (hnot hs).elim
+          · have hnot : s + 1 ∉ E p := not_mem_E_succ p s hp2 hs
+            rw [← hpred] at hr
+            exact (hnot hr).elim
+  have hcardIcc : (Finset.Icc 1 (p / 2)).card = p / 2 := by
+    rw [Nat.card_Icc]
+    omega
+  have hp_odd : Odd p := Nat.Prime.odd_of_ne_two (Fact.out : Nat.Prime p) (by omega : p ≠ 2)
+  have hdiv : p / 2 = (p - 1) / 2 := odd_div_two_eq p hp_odd
+  omega
+
 /-! ## Small prime tables -/
 
 lemma E_three : E 3 = {2} := by

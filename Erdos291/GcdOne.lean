@@ -16,11 +16,12 @@ estimate on their average density), and proves the conditional conclusion:
   eventually at least every constant.
 * `gcd_eq_one_infinite`: under `HA_dist` and `HA_arith`, the good set is infinite.
 
-The single permitted unproved declaration of this file is `c_eventually_le_one_half`
-(the bad-digit density `c p = |E p| / (p - 1)` is eventually `≤ 1 / 2`, an immediate
-consequence of the Wu–Chen estimate `|E p| = O(p^(2/3 + o(1)))`).  Everything else here —
-the elementary bound `log(1 - t) ≥ -2t`, the product lower bound, and the fact that
-`x / (log x)^M → ∞` — is fully proved.
+There are no unproved declarations in this file.  The bound `c p ≤ 1 / 2` is proved
+unconditionally for *every* prime `p` from the elementary "no two adjacent bad digits"
+argument (`BadSet.E_card_le_half`): `E p` has no two consecutive elements, so its
+`(p - 1) / 2` consecutive pairs `{1, 2}, {3, 4}, …` each hold at most one bad digit.  The
+remaining content — the elementary bound `log(1 - t) ≥ -2t`, the product lower bound, and
+the fact that `x / (log x)^M → ∞` — is fully proved.
 -/
 
 open scoped BigOperators
@@ -47,10 +48,46 @@ def HA_arith : Prop :=
     (∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime, (c p : ℝ))
       ≤ C * Real.log (Real.log (x : ℝ))
 
-/-- Wu–Chen: the bad-digit density `c p = |E p| / (p - 1)` is `≤ 1/2` for all sufficiently
-large primes `p`.  This is an immediate consequence of `|E p| = O(p^(2/3 + o(1)))`
-(Wu–Chen), and is the single permitted unproved declaration of this file. -/
-axiom c_eventually_le_one_half : ∀ᶠ p in atTop, Nat.Prime p → (c p : ℝ) ≤ 1 / 2
+/-- For every prime `p`, the bad-digit density `c p = |E p| / (p - 1)` is at most `1 / 2`.
+This follows from the elementary "no two adjacent bad digits" argument: `E p` has no two
+consecutive elements, so its `(p - 1) / 2` consecutive pairs `{1, 2}, {3, 4}, …` each hold
+at most one bad digit (see `BadSet.E_card_le_half`). -/
+theorem c_le_one_half (p : ℕ) (hp : Nat.Prime p) : (c p : ℝ) ≤ 1 / 2 := by
+  by_cases hp2 : p = 2
+  · rw [hp2]
+    rw [c]
+    have hE : (E 2).card = 0 := by native_decide
+    rw [hE]
+    norm_num
+  · have hp_ge3 : 3 ≤ p := by
+      have hgt : 2 < p := Nat.lt_of_le_of_ne hp.two_le (by intro h; exact hp2 h.symm)
+      omega
+    have hcard : (E p).card ≤ (p - 1) / 2 := @E_card_le_half p ⟨hp⟩ hp_ge3
+    have h2card : 2 * (E p).card ≤ p - 1 := by
+      have hmul : (p - 1) / 2 * 2 ≤ p - 1 := Nat.div_mul_le_self (p - 1) 2
+      omega
+    have hq : (c p : ℚ) ≤ 1 / 2 := by
+      rw [c]
+      have hden_pos : (0 : ℚ) < (p : ℚ) - 1 := by
+        have hp' : (1 : ℚ) < (p : ℚ) := by exact_mod_cast hp.one_lt
+        linarith
+      rw [div_le_iff₀ hden_pos]
+      have h2 : (2 : ℚ) * ((E p).card : ℚ) ≤ (p : ℚ) - 1 := by
+        have h2cardq : ((2 * (E p).card : ℕ) : ℚ) ≤ ((p - 1 : ℕ) : ℚ) := by
+          exact_mod_cast h2card
+        have hsub : ((p - 1 : ℕ) : ℚ) = (p : ℚ) - 1 := by
+          rw [Nat.cast_sub (by omega : 1 ≤ p)]
+          norm_num
+        rw [Nat.cast_mul, hsub] at h2cardq
+        exact h2cardq
+      nlinarith
+    exact (Rat.cast_le.mpr hq).trans_eq (by norm_num)
+
+/-- The bad-digit density `c p = |E p| / (p - 1)` is `≤ 1/2` for all sufficiently large
+primes `p` (in fact for all primes). -/
+theorem c_eventually_le_one_half : ∀ᶠ p in atTop, Nat.Prime p → (c p : ℝ) ≤ 1 / 2 := by
+  filter_upwards [] with p
+  exact c_le_one_half p
 
 /-- `c p` is nonnegative for every `p` (including `p = 0, 1`, where `p - 1 = 0` and
 `c p = 0`). -/
