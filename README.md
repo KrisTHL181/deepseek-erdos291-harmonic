@@ -1,5 +1,8 @@
 # Erdos291 — formalization of Erdős problem #291
 
+100% DeepSeek v4 Pro GA proof — every theorem, proof, and piece of exposition
+in this repository was generated end-to-end by the DeepSeek v4 Pro GA model.
+
 A Lean 4 / Mathlib formalization of the *resolved direction* of [Erdős problem #291](https://www.erdosproblems.com/291).
 
 ## The problem
