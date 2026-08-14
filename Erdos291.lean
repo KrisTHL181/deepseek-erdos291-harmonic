@@ -17,3 +17,6 @@ import Erdos291.Bonferroni
 import Erdos291.SecondMoment
 import Erdos291.ShellMoments
 import Erdos291.GapPolynomial
+import Erdos291.GapResultant
+import Erdos291.BadSetGrowth
+import Erdos291.HABrun
