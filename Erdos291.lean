@@ -20,3 +20,4 @@ import Erdos291.GapPolynomial
 import Erdos291.GapResultant
 import Erdos291.BadSetGrowth
 import Erdos291.HABrun
+import Erdos291.GapCoprime
