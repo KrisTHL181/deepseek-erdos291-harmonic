@@ -23,5 +23,6 @@ import Erdos291.HABrun
 import Erdos291.GapCoprime
 import Erdos291.SecondMomentDoubleCount
 import Erdos291.SecondMomentBridge
+import Erdos291.WeakSecondMoment
 import Erdos291.Reductions
 import Erdos291.Eisenstein
