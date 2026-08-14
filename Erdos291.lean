@@ -15,3 +15,4 @@ import Erdos291.Bernoulli
 import Erdos291.BulkRemoval
 import Erdos291.Bonferroni
 import Erdos291.SecondMoment
+import Erdos291.ShellMoments
