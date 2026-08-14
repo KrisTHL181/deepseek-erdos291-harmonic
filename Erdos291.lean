@@ -27,5 +27,6 @@ import Erdos291.WeakSecondMoment
 import Erdos291.ShortGapMoment
 import Erdos291.PairGCD
 import Erdos291.SymmetryOrbits
+import Erdos291.GapResultantHeight
 import Erdos291.Reductions
 import Erdos291.Eisenstein
