@@ -32,3 +32,4 @@ import Erdos291.GapResultantHeight
 import Erdos291.OddHarmonicWalk
 import Erdos291.Reductions
 import Erdos291.Eisenstein
+import Erdos291.BadDensity
