@@ -21,3 +21,4 @@ import Erdos291.GapResultant
 import Erdos291.BadSetGrowth
 import Erdos291.HABrun
 import Erdos291.GapCoprime
+import Erdos291.SecondMomentDoubleCount
