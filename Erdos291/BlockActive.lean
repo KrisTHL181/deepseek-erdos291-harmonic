@@ -17,15 +17,18 @@ This file sets up the intermediate quantity
 
 and proves the reduction
 
-  `Wmid R x ≤ 2 * activeMass R x + R * exceptionalMass R x`,
+  `Wmid R x ≤ 2 * activeMass R x + R * exceptionalMassAboveR R x`,
 
-where `exceptionalMass R x` sums `1/(p-1)` over primes dividing the fixed
-exceptional integer `Nall R` (the non-exceptional primes have at most two bad
-digits in `[R, 2R)`, by the no-three-bad-digits-of-span-`R` lemma).  Under the
-natural hypotheses
+where `exceptionalMassAboveR R x` sums `1/(p-1)` over primes `p > R` dividing
+the fixed exceptional integer `Nall R`.  The primes `p ≤ R` are deliberately
+excluded: for them `E p ⊆ [1, p-1]` cannot meet `[R, 2R)`, so they carry no
+`Wmid` contribution and must not enter the exceptional term with the `R`
+amplification.  The non-exceptional primes have at most two bad digits in
+`[R, 2R)`, by the no-three-bad-digits-of-span-`R` lemma.  Under the natural
+hypotheses
 
   * `activeMass R x ≤ C` with `C < log 2 / 16`, and
-  * `R * exceptionalMass R x → 0` uniformly in `x`,
+  * `R * exceptionalMassAboveR R x → 0` uniformly in `x`,
 
 the combined middle bound is eventually `≤ 2C + ε < log 2 / 8`, and together
 with the already-proved uniform tail decay `Wtail ≤ Ctail / log R` this yields
@@ -52,10 +55,11 @@ noncomputable def activeMass (R x : ℕ) : ℝ :=
       primeWeight p
     else 0
 
-/-- The exceptional prime mass: the sum of `1/(p-1)` over primes `p ≤ x`
-dividing the fixed exceptional integer `Nall R`. -/
-noncomputable def exceptionalMass (R x : ℕ) : ℝ :=
-  ∑ p ∈ (Finset.Icc 2 x).filter (fun p => Nat.Prime p ∧ p ∣ Nall R),
+/-- The exceptional prime mass above `R`: the sum of `1/(p-1)` over primes
+`R < p ≤ x` dividing the fixed exceptional integer `Nall R`.  Primes `p ≤ R`
+are omitted because `E p ⊆ [1, p-1]` never meets `[R, 2R)`. -/
+noncomputable def exceptionalMassAboveR (R x : ℕ) : ℝ :=
+  ∑ p ∈ (Finset.Icc 2 x).filter (fun p => R < p ∧ Nat.Prime p ∧ p ∣ Nall R),
     primeWeight p
 
 /-- `activeMass` is nonnegative. -/
@@ -67,9 +71,9 @@ lemma activeMass_nonneg (R x : ℕ) : 0 ≤ activeMass R x := by
     · simp [h, primeWeight]
     · simp [h])
 
-/-- `exceptionalMass` is nonnegative. -/
-lemma exceptionalMass_nonneg (R x : ℕ) : 0 ≤ exceptionalMass R x := by
-  unfold exceptionalMass
+/-- `exceptionalMassAboveR` is nonnegative. -/
+lemma exceptionalMassAboveR_nonneg (R x : ℕ) : 0 ≤ exceptionalMassAboveR R x := by
+  unfold exceptionalMassAboveR
   exact Finset.sum_nonneg (by
     intro p hp
     exact div_nonneg (by norm_num : (0 : ℝ) ≤ 1) (Nat.cast_nonneg _))
@@ -156,11 +160,11 @@ lemma E_inter_card_le_two_of_not_dvd_Nall (p R : ℕ) (hp : Nat.Prime p)
 
 /-- Per-prime comparison: the contribution `|E p ∩ [R, 2R)| / (p-1)` is at most
 the active contribution `2/(p-1)` for non-exceptional primes, plus the
-exceptional contribution `R/(p-1)` when `p ∣ Nall R`. -/
+exceptional contribution `R/(p-1)` when `R < p` and `p ∣ Nall R`. -/
 private lemma E_card_mul_weight_le (R p : ℕ) (hp : Nat.Prime p) :
     (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) * primeWeight p
       ≤ (if (E p ∩ Finset.Ico R (2 * R)).Nonempty then 2 * primeWeight p else 0)
-        + (R : ℝ) * (if p ∣ Nall R then primeWeight p else 0) := by
+        + (R : ℝ) * (if R < p ∧ p ∣ Nall R then primeWeight p else 0) := by
   have hw : 0 ≤ primeWeight p := by
     dsimp [primeWeight]
     exact div_nonneg (by norm_num : (0 : ℝ) ≤ 1) (Nat.cast_nonneg _)
@@ -175,19 +179,32 @@ private lemma E_card_mul_weight_le (R p : ℕ) (hp : Nat.Prime p) :
       omega
     rwa [hcard] at hle
   by_cases hdvd : p ∣ Nall R
-  · by_cases hnon : (E p ∩ Finset.Ico R (2 * R)).Nonempty
-    · simp [hnon, hdvd]
-      have hcardR' : (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) ≤ (R : ℝ) := by
-        exact_mod_cast hcardR
-      have hle' : (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) *
-            ((p - 1 : ℕ) : ℝ)⁻¹ ≤ (R : ℝ) * ((p - 1 : ℕ) : ℝ)⁻¹ := by
-        simpa [primeWeight] using mul_le_mul_of_nonneg_right hcardR' hw
-      nlinarith [hle', hw']
-    · have hcard0 : (E p ∩ Finset.Ico R (2 * R)).card = 0 := by
+  · by_cases hRlt : R < p
+    · by_cases hnon : (E p ∩ Finset.Ico R (2 * R)).Nonempty
+      · simp [hnon, hRlt, hdvd]
+        have hcardR' : (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) ≤ (R : ℝ) := by
+          exact_mod_cast hcardR
+        have hle' : (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) *
+              ((p - 1 : ℕ) : ℝ)⁻¹ ≤ (R : ℝ) * ((p - 1 : ℕ) : ℝ)⁻¹ := by
+          simpa [primeWeight] using mul_le_mul_of_nonneg_right hcardR' hw
+        nlinarith [hle', hw']
+      · have hcard0 : (E p ∩ Finset.Ico R (2 * R)).card = 0 := by
+          rw [Finset.card_eq_zero]
+          exact Finset.not_nonempty_iff_eq_empty.mp hnon
+        simp [hnon, hRlt, hdvd, hcard0]
+        exact mul_nonneg (Nat.cast_nonneg _) hw'
+    · have hnon0 : ¬ (E p ∩ Finset.Ico R (2 * R)).Nonempty := by
+        intro h
+        rcases h with ⟨r, hr⟩
+        have hrE : r ∈ E p := (Finset.mem_inter.mp hr).1
+        have hrI := Finset.mem_Ico.mp (Finset.mem_inter.mp hr).2
+        have hrEp : r ≤ p - 1 := (Finset.mem_Icc.mp (Finset.mem_filter.mp hrE).1).2
+        have hp_le_R : p ≤ R := le_of_not_gt hRlt
+        omega
+      have hcard0 : (E p ∩ Finset.Ico R (2 * R)).card = 0 := by
         rw [Finset.card_eq_zero]
-        exact Finset.not_nonempty_iff_eq_empty.mp hnon
-      simp [hnon, hdvd, hcard0]
-      exact mul_nonneg (Nat.cast_nonneg _) hw'
+        exact Finset.not_nonempty_iff_eq_empty.mp hnon0
+      simp [hnon0, hRlt, hdvd, hcard0]
   · have hcard2 : (E p ∩ Finset.Ico R (2 * R)).card ≤ 2 :=
       E_inter_card_le_two_of_not_dvd_Nall p R hp hdvd
     by_cases hnon : (E p ∩ Finset.Ico R (2 * R)).Nonempty
@@ -201,9 +218,9 @@ private lemma E_card_mul_weight_le (R p : ℕ) (hp : Nat.Prime p) :
       simp [hnon, hdvd, hcard0]
 
 /-- The middle block is controlled by the active prime mass plus the exceptional
-mass: `Wmid R x ≤ 2 * activeMass R x + R * exceptionalMass R x`. -/
-theorem Wmid_le_two_mul_activeMass_add_R_mul_exceptionalMass (R x : ℕ) :
-    Wmid R x ≤ 2 * activeMass R x + (R : ℝ) * exceptionalMass R x := by
+mass above `R`: `Wmid R x ≤ 2 * activeMass R x + R * exceptionalMassAboveR R x`. -/
+theorem Wmid_le_two_mul_activeMass_add_R_mul_exceptionalMassAboveR (R x : ℕ) :
+    Wmid R x ≤ 2 * activeMass R x + (R : ℝ) * exceptionalMassAboveR R x := by
   have h1 : Wmid R x ≤ W R x := Wmid_le_W R x
   have h2 : W R x ≤ ∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
       (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) / ((p - 1 : ℕ) : ℝ) :=
@@ -220,48 +237,52 @@ theorem Wmid_le_two_mul_activeMass_add_R_mul_exceptionalMass (R x : ℕ) :
         (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) * primeWeight p)
       ≤ ∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
         ((if (E p ∩ Finset.Ico R (2 * R)).Nonempty then 2 * primeWeight p else 0)
-          + (R : ℝ) * (if p ∣ Nall R then primeWeight p else 0)) := by
+          + (R : ℝ) * (if R < p ∧ p ∣ Nall R then primeWeight p else 0)) := by
     refine Finset.sum_le_sum ?_
     intro p hp
     exact E_card_mul_weight_le R p (Finset.mem_filter.mp hp).2
   have h4 : (∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
         ((if (E p ∩ Finset.Ico R (2 * R)).Nonempty then 2 * primeWeight p else 0)
-          + (R : ℝ) * (if p ∣ Nall R then primeWeight p else 0)))
-      = 2 * activeMass R x + (R : ℝ) * exceptionalMass R x := by
+          + (R : ℝ) * (if R < p ∧ p ∣ Nall R then primeWeight p else 0)))
+      = 2 * activeMass R x + (R : ℝ) * exceptionalMassAboveR R x := by
     calc
       (∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
           ((if (E p ∩ Finset.Ico R (2 * R)).Nonempty then 2 * primeWeight p else 0)
-            + (R : ℝ) * (if p ∣ Nall R then primeWeight p else 0)))
+            + (R : ℝ) * (if R < p ∧ p ∣ Nall R then primeWeight p else 0)))
           = (∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
               (if (E p ∩ Finset.Ico R (2 * R)).Nonempty then 2 * primeWeight p else 0))
             + ∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
-              ((R : ℝ) * (if p ∣ Nall R then primeWeight p else 0)) := by
+              ((R : ℝ) * (if R < p ∧ p ∣ Nall R then primeWeight p else 0)) := by
               rw [Finset.sum_add_distrib]
-      _ = 2 * activeMass R x + (R : ℝ) * exceptionalMass R x := by
+      _ = 2 * activeMass R x + (R : ℝ) * exceptionalMassAboveR R x := by
         congr 1
         · unfold activeMass
           rw [Finset.mul_sum]
           apply Finset.sum_congr rfl
           intro p hp
           by_cases h : (E p ∩ Finset.Ico R (2 * R)).Nonempty <;> simp [h]
-        · unfold exceptionalMass
+        · unfold exceptionalMassAboveR
           rw [Finset.mul_sum]
           have hdist : (∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
-              ((R : ℝ) * (if p ∣ Nall R then primeWeight p else 0)))
+              ((R : ℝ) * (if R < p ∧ p ∣ Nall R then primeWeight p else 0)))
             = ∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
-              (if p ∣ Nall R then (R : ℝ) * primeWeight p else 0) := by
+              (if R < p ∧ p ∣ Nall R then (R : ℝ) * primeWeight p else 0) := by
             apply Finset.sum_congr rfl
             intro p hp
-            by_cases h : p ∣ Nall R <;> simp [h]
-          rw [hdist, ← Finset.sum_filter]
-          simp [Finset.filter_filter]
+            by_cases h : R < p ∧ p ∣ Nall R <;> simp [h]
+          have hset : ((Finset.Icc 2 x).filter Nat.Prime).filter
+                (fun p => R < p ∧ p ∣ Nall R)
+              = (Finset.Icc 2 x).filter (fun p => R < p ∧ Nat.Prime p ∧ p ∣ Nall R) := by
+            ext p
+            simp [and_assoc, and_left_comm, and_comm]
+          rw [hdist, ← Finset.sum_filter, hset]
   calc
     Wmid R x ≤ W R x := h1
     _ ≤ ∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
         (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) / ((p - 1 : ℕ) : ℝ) := h2
     _ = ∑ p ∈ (Finset.Icc 2 x).filter Nat.Prime,
         (((E p ∩ Finset.Ico R (2 * R)).card : ℕ) : ℝ) * primeWeight p := h2'
-    _ ≤ 2 * activeMass R x + (R : ℝ) * exceptionalMass R x :=
+    _ ≤ 2 * activeMass R x + (R : ℝ) * exceptionalMassAboveR R x :=
         le_trans h3 (le_of_eq h4)
 
 /-! ## Hypotheses and the capstone reductions -/
@@ -272,19 +293,19 @@ def HA_activeMass_small : Prop :=
   ∃ R₀ : ℕ, ∃ C : ℝ, 0 ≤ C ∧ C < Real.log 2 / 16 ∧
     ∀ R : ℕ, R₀ ≤ R → ∀ x : ℕ, activeMass R x ≤ C
 
-/-- The exceptional term vanishes: `R * exceptionalMass R x → 0` uniformly in
-`x` as `R → ∞`. -/
+/-- The exceptional term vanishes: `R * exceptionalMassAboveR R x → 0`
+uniformly in `x` as `R → ∞`. -/
 def HA_exceptionalMass_vanishes : Prop :=
   ∀ ε : ℝ, 0 < ε → ∃ R₀ : ℕ, ∀ R : ℕ, R₀ ≤ R → ∀ x : ℕ,
-    (R : ℝ) * exceptionalMass R x ≤ ε
+    (R : ℝ) * exceptionalMassAboveR R x ≤ ε
 
 /-- The combined hypothesis needed for the constant block bound:
-eventually `2 * activeMass R x + R * exceptionalMass R x ≤ C` with
+eventually `2 * activeMass R x + R * exceptionalMassAboveR R x ≤ C` with
 `C < log 2 / 8`, uniformly in `x`. -/
 def HA_active_mass_constant_bound : Prop :=
   ∃ R₀ : ℕ, ∃ C : ℝ, 0 ≤ C ∧ C < Real.log 2 / 8 ∧
     ∀ R : ℕ, R₀ ≤ R → ∀ x : ℕ,
-      2 * activeMass R x + (R : ℝ) * exceptionalMass R x ≤ C
+      2 * activeMass R x + (R : ℝ) * exceptionalMassAboveR R x ≤ C
 
 /-- Small active mass plus vanishing exceptional mass imply the combined
 constant bound. -/
@@ -309,7 +330,7 @@ theorem HA_active_mass_constant_bound_of_small_activeMass_and_vanishing_exceptio
   have hRE : RE ≤ R := le_trans (le_max_right RA RE) hR
   have hmass : 2 * activeMass R x ≤ 2 * CA :=
     mul_le_mul_of_nonneg_left (hAmass R hRA x) (by norm_num : (0 : ℝ) ≤ 2)
-  have hexc : (R : ℝ) * exceptionalMass R x ≤ (Real.log 2 / 8 - 2 * CA) / 2 :=
+  have hexc : (R : ℝ) * exceptionalMassAboveR R x ≤ (Real.log 2 / 8 - 2 * CA) / 2 :=
     hExc R hRE x
   dsimp [C]
   nlinarith
@@ -335,7 +356,8 @@ theorem xP_tendsto_atTop_of_active_mass_bound (h : HA_active_mass_constant_bound
     have hRmid : Rmid₀ ≤ R := le_trans (le_max_left Rmid₀ Rt) hR
     have hRtail : Rt ≤ R := le_trans (le_max_right Rmid₀ Rt) hR
     have hWmid : Wmid R x ≤ C := by
-      exact le_trans (Wmid_le_two_mul_activeMass_add_R_mul_exceptionalMass R x)
+      exact le_trans
+        (Wmid_le_two_mul_activeMass_add_R_mul_exceptionalMassAboveR R x)
         (hmid R hRmid x)
     have hWtail : Wtail R x ≤ (Real.log 2 / 8 - C) / 2 := htail R hRtail x
     have hWdec := W_eq_Wtail_add_Wmid R x
