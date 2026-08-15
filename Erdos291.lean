@@ -44,3 +44,4 @@ import Erdos291.BlockMidDyadic
 import Erdos291.BlockMidCount
 import Erdos291.BlockActive
 import Erdos291.BlockActiveDyadic
+import Erdos291.BlockActiveProof
