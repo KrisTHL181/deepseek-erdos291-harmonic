@@ -34,3 +34,8 @@ import Erdos291.Reductions
 import Erdos291.Eisenstein
 import Erdos291.BadDensity
 import Erdos291.SecondMomentPrimeMass
+import Erdos291.LocalSparsity
+import Erdos291.AextraDecomposition
+import Erdos291.DyadicBlocks
+import Erdos291.BlockEstimateToGoal
+import Erdos291.BlockVanishing
