@@ -40,3 +40,4 @@ import Erdos291.DyadicBlocks
 import Erdos291.BlockEstimateToGoal
 import Erdos291.BlockVanishing
 import Erdos291.BlockMid
+import Erdos291.BlockMidDyadic
