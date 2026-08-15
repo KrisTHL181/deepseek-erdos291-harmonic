@@ -264,6 +264,88 @@ lemma Ctail_pos : 0 < Ctail := by
   dsimp [Ctail, Cpsi]
   positivity
 
+/-! ## The dyadic-block tail and its uniform decay in `R` -/
+
+/-- The `p > r²` tail of the weighted bad-digit double sum, restricted to the
+dyadic block `R ≤ r < 2R`:
+`Wtail R x = ∑_{R ≤ r < 2R} ∑_{r² < p ≤ x, p ∣ num H_r} 1/(p-1)`. -/
+def Wtail (R x : ℕ) : ℝ :=
+  ∑ r ∈ Finset.Ico R (2 * R),
+    ∑ p ∈ (Finset.Ico (r ^ 2 + 1) (x + 1)).filter
+        (fun p => Nat.Prime p ∧ (p : ℤ) ∣ (harmonic r).num),
+      (1 / ((p - 1 : ℕ) : ℝ))
+
+/-- The dyadic block tail is at most `Ctail / log R`, uniformly in `x`. -/
+lemma Wtail_le (R x : ℕ) (hR : 2 ≤ R) :
+    Wtail R x ≤ Ctail / Real.log (R : ℝ) := by
+  unfold Wtail
+  have hRreal_pos : 0 < (R : ℝ) := by exact_mod_cast (by omega : 0 < R)
+  have hRlog_pos : 0 < Real.log (R : ℝ) := by
+    exact Real.log_pos (by exact_mod_cast (by omega : 1 < R) : (1 : ℝ) < (R : ℝ))
+  have hRprod_pos : 0 < (R : ℝ) * Real.log (R : ℝ) := mul_pos hRreal_pos hRlog_pos
+  calc
+    (∑ r ∈ Finset.Ico R (2 * R),
+        ∑ p ∈ (Finset.Ico (r ^ 2 + 1) (x + 1)).filter
+            (fun p => Nat.Prime p ∧ (p : ℤ) ∣ (harmonic r).num),
+          (1 / ((p - 1 : ℕ) : ℝ)))
+        ≤ ∑ r ∈ Finset.Ico R (2 * R),
+            Ctail * (1 / ((r : ℝ) * Real.log (r : ℝ))) := by
+          refine Finset.sum_le_sum ?_
+          intro r hr
+          have hr2 : 2 ≤ r := by
+            have hi := Finset.mem_Ico.mp hr
+            omega
+          exact inner_sum_le r x hr2
+    _ ≤ ∑ r ∈ Finset.Ico R (2 * R),
+            Ctail * (1 / ((R : ℝ) * Real.log (R : ℝ))) := by
+          refine Finset.sum_le_sum ?_
+          intro r hr
+          have hi := Finset.mem_Ico.mp hr
+          have hRr : R ≤ r := hi.1
+          have hlog_mono : Real.log (R : ℝ) ≤ Real.log (r : ℝ) := by
+            exact Real.log_le_log hRreal_pos (by exact_mod_cast hRr : (R : ℝ) ≤ (r : ℝ))
+          have hcast_mono : (R : ℝ) ≤ (r : ℝ) := by exact_mod_cast hRr
+          have hprod_mono : (R : ℝ) * Real.log (R : ℝ) ≤ (r : ℝ) * Real.log (r : ℝ) := by
+            exact mul_le_mul hcast_mono hlog_mono (le_of_lt hRlog_pos) (Nat.cast_nonneg r)
+          have hinv : 1 / ((r : ℝ) * Real.log (r : ℝ)) ≤
+              1 / ((R : ℝ) * Real.log (R : ℝ)) := by
+            exact one_div_le_one_div_of_le hRprod_pos hprod_mono
+          exact mul_le_mul_of_nonneg_left hinv (le_of_lt Ctail_pos)
+    _ = (Finset.Ico R (2 * R)).card • (Ctail * (1 / ((R : ℝ) * Real.log (R : ℝ)))) := by
+          rw [Finset.sum_const]
+    _ = (R : ℝ) * (Ctail * (1 / ((R : ℝ) * Real.log (R : ℝ)))) := by
+          rw [nsmul_eq_mul]
+          have hcard : (Finset.Ico R (2 * R)).card = R := by
+            simp
+            omega
+          rw [hcard]
+    _ = Ctail / Real.log (R : ℝ) := by
+          have hRne : (R : ℝ) ≠ 0 := ne_of_gt hRreal_pos
+          have hlogne : Real.log (R : ℝ) ≠ 0 := ne_of_gt hRlog_pos
+          field_simp [hRne, hlogne]
+
+/-- `Ctail / log R → 0` as `R → ∞` along the naturals. -/
+lemma Ctail_div_log_tendsto_zero :
+    Tendsto (fun R : ℕ => Ctail / Real.log (R : ℝ)) atTop (𝓝 0) := by
+  have hlog : Tendsto (fun R : ℕ => Real.log (R : ℝ)) atTop atTop :=
+    Real.tendsto_log_atTop.comp tendsto_natCast_atTop_atTop
+  exact hlog.const_div_atTop Ctail
+
+/-- **The uniform tail decay.** For every `ε > 0` there is `R₀` such that for all
+`R ≥ R₀` and all `x`, the dyadic-block tail satisfies `Wtail R x ≤ ε`. -/
+theorem Wtail_uniformly_tends_to_zero :
+    ∀ ε > 0, ∃ R₀, ∀ R ≥ R₀, ∀ x, Wtail R x ≤ ε := by
+  intro ε hε
+  have hbound : ∀ᶠ R : ℕ in atTop, Ctail / Real.log (R : ℝ) < ε := by
+    exact (tendsto_order.1 Ctail_div_log_tendsto_zero).2 ε hε
+  rcases Filter.eventually_atTop.1 hbound with ⟨N, hN⟩
+  refine ⟨max N 2, ?_⟩
+  intro R hR x
+  have hR2 : 2 ≤ R := le_trans (le_max_right N 2) hR
+  have hNR : N ≤ R := le_trans (le_max_left N 2) hR
+  have hlt : Ctail / Real.log (R : ℝ) < ε := hN R hNR
+  exact (Wtail_le R x hR2).trans hlt.le
+
 /-- `log 2 ≤ 1`. -/
 lemma log_two_le_one : Real.log 2 ≤ 1 := by
   calc
