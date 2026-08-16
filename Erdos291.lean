@@ -52,3 +52,5 @@ import Erdos291.WmidReplacement
 import Erdos291.MiddlePairStructure
 import Erdos291.MidBlockRestrictions
 import Erdos291.SyAttack
+import Erdos291.MidResultant
+import Erdos291.MidConjectures
