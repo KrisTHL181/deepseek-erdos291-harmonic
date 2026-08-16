@@ -58,3 +58,4 @@ import Erdos291.MidConjectures
 import Erdos291.MidAttackLine2
 import Erdos291.CRAttack
 import Erdos291.MidAttackLine3
+import Erdos291.MidCriticalSeparation
