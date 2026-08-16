@@ -46,3 +46,7 @@ import Erdos291.BlockActive
 import Erdos291.BlockActiveDyadic
 import Erdos291.BlockActiveProof
 import Erdos291.WmidBound
+import Erdos291.MiddleRowMassBound
+import Erdos291.WmidReplacement
+import Erdos291.MiddlePairStructure
+import Erdos291.SyAttack
