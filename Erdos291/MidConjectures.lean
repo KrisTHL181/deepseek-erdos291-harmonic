@@ -1,4 +1,5 @@
 import Erdos291.MidResultant
+import Erdos291.MidRoots
 import Erdos291.WmidRegimes
 
 /-!
@@ -226,6 +227,41 @@ theorem xP_tendsto_atTop_of_mid_column_route
     Tendsto (fun x : ℕ => (x : ℝ) * prodOneSub x) atTop atTop :=
   xP_tendsto_atTop_of_Wmid_constant_bound
     (HA_Wmid_constant_bound_of_mid_column_route hcol hstrict hsmall hLH)
+
+/-! ## MID-route conjectures: common roots and the middle resultant -/
+
+/-- No F_p-valued common-root (CR) solution for intrinsic MID pairs:
+`H_β = H_{β+r} = H_{2r-β}` has no solution `β ∈ [1, 2r] \ {r}`.
+Evidence: 0/4492 intrinsic pairs `p ≤ 200000`; 0/10924 intrinsic MID pairs
+`r ≤ 20000` (all computed by C scans in earlier attack rounds). -/
+def HA_mid_CR_free : Prop :=
+  ∀ p r : ℕ, Nat.Prime p → 4 * r + 1 < p → r ∈ E p →
+    ∀ β : ℕ, 1 ≤ β → β ≤ 2 * r → β ≠ r →
+      harmonicSum p β = harmonicSum p (β + r) →
+      harmonicSum p β = harmonicSum p (2 * r - β) → False
+
+/-- The middle resultant `resultant (Q p r) (Q p (p-1-2r))` is nonzero for every intrinsic
+MID pair.  Under `HA_mid_CR_free` this is equivalent to `H_{2r} ≠ 0` (via
+`resultant_Qr_Qe_eq_zero_iff` and `Fp_common_root_iff_CR`); both sides hold in all scanned
+data (0 counterexamples). -/
+def HA_mid_resultant_Qr_Qe_ne_zero_intrinsic : Prop :=
+  ∀ p r : ℕ, Nat.Prime p → 4 * r + 1 < p → r ∈ E p →
+    (Polynomial.resultant (Q p r) (Q p (p - 1 - 2 * r)) : ZMod p) ≠ 0
+
+/-- The safe implication available without an F_p-valued root assumption:
+`H_{2r} ≠ 0` and `res(F,G) ≠ 0` together imply the middle resultant is nonzero.
+This follows directly from `MidResultant.resultant_Qr_Qe_eq_zero_iff`. -/
+theorem HA_mid_resultant_Qr_Qe_ne_zero_intrinsic_of_resultant_F_G_ne_zero_and_harmonicSum_two_mul_r_ne_zero
+    (hH : HA_mid_harmonicSum_two_mul_r_ne_zero)
+    (hFG : HA_mid_resultant_F_G_ne_zero) :
+    HA_mid_resultant_Qr_Qe_ne_zero_intrinsic := by
+  intro p r hp hmid hrE
+  haveI : Fact p.Prime := ⟨hp⟩
+  intro hres
+  have h := (resultant_Qr_Qe_eq_zero_iff p r hrE (by omega : 2 * r + 1 < p)).mp hres
+  rcases h with hH0 | hFG0
+  · exact (hH p r hp hmid hrE) hH0
+  · exact (hFG p r hp hmid hrE) hFG0
 
 end
 
