@@ -769,17 +769,21 @@ lemma P_separable (p r : ℕ) [Fact p.Prime] (hr : r < p) : (P p r).Separable :=
   · intro i hi
     exact separable_X_add_C (i : ZMod p)
 
+/-- `resultant (Q p d) (P p d) ≠ 0` whenever `d < p`. -/
+lemma resultant_Qr_Pr_ne_zero_of_lt (p d : ℕ) [Fact p.Prime] (hdlt : d < p) :
+    (Polynomial.resultant (Q p d) (P p d) : ZMod p) ≠ 0 := by
+  have hp : Nat.Prime p := Fact.out
+  have hsep : (P p d).Separable := P_separable p d hdlt
+  have hcop : IsCoprime (P p d) (Q p d) := by
+    simpa [Q, Separable] using hsep
+  intro h0
+  have hnotcop := (Polynomial.resultant_eq_zero_iff (f := Q p d) (g := P p d)).mp h0
+  exact hnotcop.2 hcop.symm
+
 /-- `resultant (Q p r) (P p r) ≠ 0` in the intrinsic mid regime. -/
 lemma resultant_Qr_Pr_ne_zero (p r : ℕ) [Fact p.Prime] (hmid : 4 * r + 1 < p) :
     (Polynomial.resultant (Q p r) (P p r) : ZMod p) ≠ 0 := by
-  have hp : Nat.Prime p := Fact.out
-  have hr_lt : r < p := by omega
-  have hsep : (P p r).Separable := P_separable p r hr_lt
-  have hcop : IsCoprime (P p r) (Q p r) := by
-    simpa [Q, Separable] using hsep
-  intro h0
-  have hnotcop := (Polynomial.resultant_eq_zero_iff (f := Q p r) (g := P p r)).mp h0
-  exact hnotcop.2 hcop.symm
+  exact resultant_Qr_Pr_ne_zero_of_lt p r (by omega)
 
 /-- The middle resultant factors as `resultant (Q p r) (P p r)` times
 `resultant (Q p r) (derivative (midTailProduct p r e))`. -/

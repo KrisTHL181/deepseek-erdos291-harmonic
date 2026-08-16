@@ -55,3 +55,6 @@ import Erdos291.SyAttack
 import Erdos291.MidResultant
 import Erdos291.MidRoots
 import Erdos291.MidConjectures
+import Erdos291.MidAttackLine2
+import Erdos291.CRAttack
+import Erdos291.MidAttackLine3
