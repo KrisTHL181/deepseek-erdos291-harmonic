@@ -320,13 +320,20 @@ lemma not_CR_of_length_two (p r β : ℕ) [Fact p.Prime]
 
 /-! ## Proposition-level reduction -/
 
-/-- Hypothesis A': for every intrinsic MID pair and every candidate `β`, the
-symmetric-difference interval has length at least `3` or its reciprocal sum is
-nonzero. -/
-def HA_mid_crSymm_sum_ne_zero : Prop :=
+/-- Corrected symmetric-difference hypothesis: for every intrinsic MID pair and every
+candidate β (interval length at least 3), if the first CR equality
+`H_β = H_{β+r}` holds, then the symmetric-difference interval sum is nonzero.
+Equivalently: `A = 0` and `T = 0` never happen simultaneously (`A = 0 ∧ T = 0` is
+exactly CR for `2β ≠ r`). The old form "T ≠ 0 for all β" is FALSE: counterexample
+`(p,r,β)=(61,10,16)` has `H_10 = 7381/2520` (numerator divisible by 61), interval
+`[5,26]`, `T = H_26 - H_4 = 15804669767/8923714800` (numerator divisible by 61),
+but `H_16 ≠ H_26` (`H_16 ≡ 56`, `H_26 ≡ H_4 ≡ 58 (mod 61)`), so it satisfies
+`T = 0` without being a CR solution. -/
+def HA_mid_crSymm_sum_ne_zero_of_first_eq : Prop :=
   ∀ p r β : ℕ, Nat.Prime p → 4 * r + 1 < p → r ∈ E p →
     1 ≤ β → β ≤ 2 * r → β ≠ r → 2 * β ≠ r →
     crSymmLeft r β + 1 < crSymmRight r β →
+    harmonicSum p β = harmonicSum p (β + r) →
     (∑ i ∈ Finset.Icc (crSymmLeft r β) (crSymmRight r β), ((i : ZMod p)⁻¹)) ≠ 0
 
 /-- Hypothesis for the degenerate `2β = r` case: when `r` is even,
@@ -335,10 +342,11 @@ def HA_mid_harmonicSum_half_ne_three_half : Prop :=
   ∀ p r : ℕ, Nat.Prime p → 4 * r + 1 < p → r ∈ E p → Even r →
     harmonicSum p (r / 2) ≠ harmonicSum p (3 * (r / 2))
 
-/-- The symmetric-difference hypothesis plus the half/three-half hypothesis
-together imply the full CR-free statement. -/
-theorem HA_mid_CR_free_of_crSymm_sum_ne_zero_and_half
-    (hR1 : HA_mid_crSymm_sum_ne_zero) (hR2 : HA_mid_harmonicSum_half_ne_three_half) :
+/-- The corrected symmetric-difference hypothesis plus the half/three-half
+hypothesis together imply the full CR-free statement. -/
+theorem HA_mid_CR_free_of_crSymm_sum_ne_zero_of_first_eq_and_half
+    (hR1 : HA_mid_crSymm_sum_ne_zero_of_first_eq)
+    (hR2 : HA_mid_harmonicSum_half_ne_three_half) :
     HA_mid_CR_free := by
   intro p r hp hmid hrE β hβ1 hβ2 hβne hEq1 hEq2
   haveI : Fact p.Prime := ⟨hp⟩
@@ -378,7 +386,7 @@ theorem HA_mid_CR_free_of_crSymm_sum_ne_zero_and_half
   · exact not_CR_of_length_two p r β hmid hβ1 hβ2 h2βne hlen2 hEq1 hEq2
   have hle := crSymmLeft_le_right r β h2βne hβ2
   have hlt : crSymmLeft r β + 1 < crSymmRight r β := by omega
-  exact (hR1 p r β hp hmid hrE hβ1 hβ2 hβne h2βne hlt) hsum0
+  exact (hR1 p r β hp hmid hrE hβ1 hβ2 hβne h2βne hlt hEq1) hsum0
 
 end
 
