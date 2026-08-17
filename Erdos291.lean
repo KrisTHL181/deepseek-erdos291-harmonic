@@ -62,3 +62,4 @@ import Erdos291.MidAttackLine4
 import Erdos291.MidCriticalSeparation
 import Erdos291.MidFrobenius
 import Erdos291.MidTwoHalves
+import Erdos291.MidPairingDivisibility
