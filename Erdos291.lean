@@ -63,3 +63,5 @@ import Erdos291.MidCriticalSeparation
 import Erdos291.MidFrobenius
 import Erdos291.MidTwoHalves
 import Erdos291.MidPairingDivisibility
+import Erdos291.MidDuplication
+import Erdos291.MidQuarterLine
