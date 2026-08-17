@@ -163,6 +163,56 @@ lemma crSymm_sum_eq_zero_of_CR (p r β : ℕ) [Fact p.Prime]
               rw [← harmonicSum_sub_eq_sum_inv_Icc p (2 * r - β) (2 * β - r) hlen_lt]
       _ = 0 := hdiff
 
+/-- Away from the degenerate case `2β = r`, the first CR equality together with
+the vanishing symmetric-difference sum is equivalent to the full CR system. -/
+lemma CR_iff_first_eq_and_crSymm_sum_eq_zero (p r β : ℕ) [Fact p.Prime]
+    (hmid : 4 * r + 1 < p) (hβ1 : 1 ≤ β) (hβ2 : β ≤ 2 * r) (hne : 2 * β ≠ r) :
+    (harmonicSum p β = harmonicSum p (β + r) ∧
+      harmonicSum p β = harmonicSum p (2 * r - β)) ↔
+      (harmonicSum p β = harmonicSum p (β + r) ∧
+        (∑ i ∈ Finset.Icc (crSymmLeft r β) (crSymmRight r β),
+          ((i : ZMod p)⁻¹)) = 0) := by
+  constructor
+  · rintro ⟨hEq1, hEq2⟩
+    exact ⟨hEq1, crSymm_sum_eq_zero_of_CR p r β hmid hβ1 hβ2 hne hEq1 hEq2⟩
+  · rintro ⟨hEq1, hsum⟩
+    have hβr : β + r < p := by omega
+    have h2rβ : 2 * r - β < p := by omega
+    by_cases h : 2 * β < r
+    · have hleft : crSymmLeft r β = β + r + 1 := by
+        simp [crSymmLeft, h]
+      have hright : crSymmRight r β = 2 * r - β := by
+        simp [crSymmRight, h]
+      have hsum' : (∑ i ∈ Finset.Icc (β + r + 1) (2 * r - β),
+          ((i : ZMod p)⁻¹)) = 0 := by
+        simpa [hleft, hright] using hsum
+      have hfirst : 2 * r - β = β + r + (r - 2 * β) := by omega
+      have hlen_lt : β + r + (r - 2 * β) < p := by
+        simpa [hfirst] using h2rβ
+      have hdiff : harmonicSum p (2 * r - β) - harmonicSum p (β + r) = 0 := by
+        rw [hfirst, harmonicSum_sub_eq_sum_inv_Icc p (β + r) (r - 2 * β) hlen_lt]
+        simpa [hfirst] using hsum'
+      have hEq12 : harmonicSum p (2 * r - β) = harmonicSum p (β + r) :=
+        sub_eq_zero.mp hdiff
+      exact ⟨hEq1, hEq1.trans hEq12.symm⟩
+    · have hgt : r < 2 * β := by omega
+      have hleft : crSymmLeft r β = 2 * r - β + 1 := by
+        simp [crSymmLeft, h]
+      have hright : crSymmRight r β = β + r := by
+        simp [crSymmRight, h]
+      have hsum' : (∑ i ∈ Finset.Icc (2 * r - β + 1) (β + r),
+          ((i : ZMod p)⁻¹)) = 0 := by
+        simpa [hleft, hright] using hsum
+      have hfirst : β + r = 2 * r - β + (2 * β - r) := by omega
+      have hlen_lt : 2 * r - β + (2 * β - r) < p := by
+        simpa [hfirst] using hβr
+      have hdiff : harmonicSum p (β + r) - harmonicSum p (2 * r - β) = 0 := by
+        rw [hfirst, harmonicSum_sub_eq_sum_inv_Icc p (2 * r - β) (2 * β - r) hlen_lt]
+        simpa [hfirst] using hsum'
+      have hEq12 : harmonicSum p (β + r) = harmonicSum p (2 * r - β) :=
+        sub_eq_zero.mp hdiff
+      exact ⟨hEq1, hEq1.trans hEq12⟩
+
 /-- When `2β = r` the two CR equations coincide: both say `H_β = H_{3β}`.
 This is the exact remaining case after the symmetric-difference reduction. -/
 lemma CR_iff_of_two_mul_beta_eq_r (p r β : ℕ)
