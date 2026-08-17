@@ -58,5 +58,7 @@ import Erdos291.MidConjectures
 import Erdos291.MidAttackLine2
 import Erdos291.CRAttack
 import Erdos291.MidAttackLine3
+import Erdos291.MidAttackLine4
 import Erdos291.MidCriticalSeparation
 import Erdos291.MidFrobenius
+import Erdos291.MidTwoHalves
