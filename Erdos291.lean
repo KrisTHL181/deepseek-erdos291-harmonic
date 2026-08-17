@@ -65,3 +65,6 @@ import Erdos291.MidTwoHalves
 import Erdos291.MidPairingDivisibility
 import Erdos291.MidDuplication
 import Erdos291.MidQuarterLine
+import Erdos291.MidQuarterConsequences
+import Erdos291.MidHolonomy
+import Erdos291.MidDifferenceConnection
